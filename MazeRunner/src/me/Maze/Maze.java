@@ -10,16 +10,17 @@ public class Maze {
     private int numRows;
     private int numCols;
     @SuppressWarnings("rawtypes")
-	private ArrayStack stack = new ArrayStack();
+	private ArrayStack<Coordinate> stack = new ArrayStack<Coordinate>();
+    private boolean[] wallState = {false,true,true,false};
     
 
     public Maze(int numRows, int numCols) {
-        this.numRows = numRows-1;
-        this.numCols = numCols-1;
+        this.numRows = numRows;
+        this.numCols = numCols;
         square = new MazeSquare[numRows][numCols];
         for(int i = 0; i < numRows; i++){
         	for(int j = 0; j< numCols; j++){
-        		square[i][j] = new MazeSquare(new Coordinate(i,j));
+        		square[i][j] = new MazeSquare(new Coordinate(i,j), wallState);
         		
         	}
         	
@@ -61,7 +62,7 @@ public class Maze {
     }
 
     public Coordinate eastOf(Coordinate p) { 
-    	return(new Coordinate(p.getRow(), p.getCol()-1));
+    	return(new Coordinate(p.getRow(), p.getCol()+1));
     }
 
     public Coordinate southOf(Coordinate p) { 
@@ -73,17 +74,19 @@ public class Maze {
     }
 
     public boolean movePossible(Coordinate from, Coordinate to) { 
-    	if(from.getRow() >= 0 && from.getRow() <= numRows && from.getCol() >= 0 && from.getCol() <=numCols && to.getRow() >= 0 && to.getRow() <= numRows && to.getCol() >= 0 && to.getCol() <= numCols ){
-    		if(this.squareAt(to).isVisited() || this.squareAt(to).isAbandoned()){
-    			
-    			if(this.northOf(to).equals(from)){
-    				return this.squareAt(to).getWall(Direction.NORTH);
-    			}else if(this.eastOf(to).equals(from)){
-    				return this.squareAt(to).getWall(Direction.EAST);
-    			}else if(this.southOf(to).equals(from)){
-    				return this.squareAt(to).getWall(Direction.SOUTH);
-    			}else if(this.westOf(to).equals(from)){
-    				return this.squareAt(to).getWall(Direction.WEST);
+//getRow >= 0 so its within border and getRow < numRows because of west edge
+    	if(from.getRow() >= 0 && from.getRow() < numRows && from.getCol() >= 0 && from.getCol() < numCols && to.getRow() >= 0 && to.getRow() < numRows && to.getCol() >= 0 && to.getCol() < numCols ){
+//isVisited will be false then changed to true to move past if. Same with isAbandoned
+    		if(!this.squareAt(to).isVisited() && !this.squareAt(to).isAbandoned()){
+
+    			if(this.northOf(from).equals(to)){
+    				return !this.squareAt(to).getWall(Direction.SOUTH);
+    			}else if(this.eastOf(from).equals(to)){
+    				return !this.squareAt(from).getWall(Direction.EAST);
+    			}else if(this.southOf(from).equals(to)){
+    				return !this.squareAt(from).getWall(Direction.SOUTH);
+    			}else if(this.westOf(from).equals(to)){
+    				return !this.squareAt(to).getWall(Direction.EAST);
     			}else{
     				return false;
     			}
@@ -109,32 +112,39 @@ otherwise: pop the stack, and go to 2.
     	Random rnd = new Random();
     	
         startPos = new Coordinate(rnd.nextInt(numRows), 0);
-        finishPos = new Coordinate(rnd.nextInt(numRows), numCols);
+        finishPos = new Coordinate(rnd.nextInt(numRows), numCols-1);
+        
+        for(int i = 0; i< numCols; i++){
+        	this.squareAt(new Coordinate(0, i)).toggleWall(Direction.NORTH);
+        }
+        for(int i = 0; i< numRows; i++){
+        	this.squareAt(new Coordinate(i,0)).toggleWall(Direction.WEST);
+        }
+        
+        
         this.squareAt(startPos).toggleWall(Direction.WEST);
         this.squareAt(finishPos).toggleWall(Direction.EAST);
-    	stack.push(square[startPos.getRow()][startPos.getCol()].getPosition());
     	square[startPos.getRow()][startPos.getCol()].visit();
-    	
+    	stack.push(startPos);
     	
     	
     	while(stack.size() != -1){
-    		if(this.unvisitedNeighbors((Coordinate) stack.top()).size() != 0){
+    		if(this.unvisitedNeighbors(stack.top()).size() != 0){
     			ArrayList<Coordinate> list = new ArrayList<Coordinate>();
-    			list = this.unvisitedNeighbors((Coordinate) stack.top());
-    			Coordinate tempCoord = (Coordinate) stack.top();
+    			list = this.unvisitedNeighbors(stack.top());
     			int randTemp = rnd.nextInt(list.size());
+    			Coordinate myOldPos = stack.top();
     			stack.push(list.get(randTemp));
-    			//just used casts...
-    			Coordinate myNewPos = (Coordinate) stack.top();
+    			Coordinate myNewPos = stack.top();
     			
-    			if(this.northOf(list.get(randTemp)).equals(tempCoord)){
-    				this.squareAt(myNewPos).toggleWall(Direction.NORTH);
-    			}else if(this.southOf(list.get(randTemp)).equals(tempCoord)){
+    			if(this.northOf(myOldPos).equals(myNewPos) && this.squareAt(myNewPos).getWall(Direction.SOUTH)){
     				this.squareAt(myNewPos).toggleWall(Direction.SOUTH);
-    			}else if(this.eastOf(list.get(randTemp)).equals(tempCoord)){
+    			}else if(this.southOf(myOldPos).equals(myNewPos) && this.squareAt(myOldPos).getWall(Direction.SOUTH)){
+    				this.squareAt(myOldPos).toggleWall(Direction.SOUTH);
+    			}else if(this.eastOf(myOldPos).equals(myNewPos) &&  this.squareAt(myOldPos).getWall(Direction.EAST)){
+    				this.squareAt(myOldPos).toggleWall(Direction.EAST);
+    			}else if(this.westOf(myOldPos).equals(myNewPos) && this.squareAt(myNewPos).getWall(Direction.EAST)){
     				this.squareAt(myNewPos).toggleWall(Direction.EAST);
-    			}else if(this.westOf(list.get(randTemp)).equals(tempCoord)){
-    				this.squareAt(myNewPos).toggleWall(Direction.WEST);
     			}
     			
     			this.visitPos(myNewPos);
@@ -143,6 +153,8 @@ otherwise: pop the stack, and go to 2.
     			if(stack.size() == 0){
     				break;
     			}
+    			
+ 
 
     			stack.pop();
     		}

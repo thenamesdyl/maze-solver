@@ -3,9 +3,8 @@ package me.Maze;
 public class MazeSquare {
 
     // set the default wall state to no walls.
-	
-	//I changed this because it makes more sense to me.
-    private boolean[] wall = {true, true, true, true};
+
+    private boolean[] wall = {false, false, false, false};
     private boolean visited;
     private boolean abandoned;
     private Coordinate myPosition;
@@ -60,9 +59,7 @@ public class MazeSquare {
     }
 
     public boolean equals(MazeSquare other) { 
-    	if(other.getPosition().equals(this.myPosition)){
-    		return true;
-    	}
-    	return false;
+    	
+    	return other.getPosition().equals(this.getPosition());
     }
 }

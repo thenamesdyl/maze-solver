@@ -19,13 +19,9 @@ public class ArrayStack<E> implements Stack {
 	}
 
 	public E pop() {
-		if (isEmpty()){
-	         throw new EmptyStackException();
-		}
 
 
 		E result = data[top];
-		data[top] = null; 
 		top--;	 
 		return result;
 	}
@@ -52,7 +48,7 @@ public class ArrayStack<E> implements Stack {
 		
 	}
 	private void expandStack(){
-		E[] larger = (E[])(new Object[data.length*2]);
+		E[] larger = (E[])(new Coordinate[data.length*2]);
 
 		for (int index=0; index < data.length; index++){
 			larger[index] = data[index];
