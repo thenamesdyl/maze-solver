@@ -1,5 +1,5 @@
 # Maze Solver
-This was done around 4 years ago, was for a class I took in high school. Not representative of current work.
+This was done around 4 years ago, was for a class I took in high school. Not representative of current work, the graphics part of this were provided.
 ## Features
 
 1. Generates a maze with cool blue and green graphics
